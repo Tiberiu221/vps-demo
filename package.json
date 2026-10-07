@@ -1,6 +1,6 @@
 {
   "name": "vps-demo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Tiny Express app for a first end-to-end Linux (VPS) deploy",
   "main": "server.js",
