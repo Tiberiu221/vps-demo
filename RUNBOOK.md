@@ -22,7 +22,7 @@ printf '#cloud-config\ndisable_root: false\nssh_authorized_keys:\n  - %s\n' "$(c
 multipass launch 24.04 --name vps --cloud-init ~/vps-cloud-init.yaml
 multipass info vps
 ```
-→ `Launched: vps` (prima dată descarcă imaginea, câteva minute), apoi `IPv4: 192.168.64.X` = IP-ul tău. VM-ul e accesibil de pe Mac (ssh, `curl http://IP`, browser). cloud-init îți pune cheia și la root, deci **de aici pașii sunt identici cu Hetzner**.
+→ `Launched: vps` (prima dată descarcă imaginea, câteva minute), apoi `IPv4: 192.168.X.X` = IP-ul tău. VM-ul e accesibil de pe Mac (ssh, `curl http://IP`, browser). cloud-init îți pune cheia și la root, deci **de aici pașii sunt identici cu Hetzner**.
 Fără cloud-init: `multipass launch 24.04 --name vps` → `multipass shell vps` → `sudo -i` (= root). Fișierele le copiezi cu `multipass transfer deploy/setup-server.sh vps:/tmp/`, iar ca user app intri cu `sudo -iu app`.
 
 ## 2. Primul SSH + bootstrap
@@ -81,7 +81,7 @@ curl -s http://127.0.0.1:3000/health
 journalctl -u vps-demo -f       # loguri live; Ctrl+C ca să ieși
 ```
 → `Created symlink ... multi-user.target.wants/vps-demo.service`, `Active: active (running)`, `Main PID: ... (node)`, în log `vps-demo-tiberiu v1.0.0 listening on http://127.0.0.1:3000`; curl → `{"status":"ok"}`.
-Bonus `Restart=always`: `systemctl kill -s KILL vps-demo; sleep 4; systemctl status vps-demo --no-pager` → din nou `active (running)`, alt PID; în journal: `status=9/KILL` și `Scheduled restart job`.
+Bonus `Restart=always`: `kill -9 $(systemctl show -p MainPID --value vps-demo); sleep 4; systemctl status vps-demo --no-pager` → din nou `active (running)`, alt PID; în journal: `status=9/KILL` și `Scheduled restart job`. (`systemctl kill -s KILL` dă `Invalid argument` pe Ubuntu 24.04.)
 
 ## 6. nginx ca reverse proxy (80 → 127.0.0.1:3000)
 [root]
@@ -126,7 +126,7 @@ curl -s http://127.0.0.1:3000/      # "app":"vps-demo-env-2", uptimeSeconds apro
 - `Could not get lock /var/lib/dpkg/lock-frontend` → update-uri automate la primul boot: așteaptă 1–2 min și rulează din nou `bash setup-server.sh`.
 - `Permission denied (publickey)` → altă cheie: `ssh -i ~/.ssh/CHEIA root@IP`.
 - `REMOTE HOST IDENTIFICATION HAS CHANGED` (ai recreat VM-ul) → `ssh-keygen -R IP`.
-- `No route to host` spre 192.168.64.X → System Settings → Privacy & Security → Local Network → bifează aplicația de terminal; oprește VPN-ul.
+- `No route to host` spre 192.168.X.X → System Settings → Privacy & Security → Local Network → bifează aplicația de terminal; oprește VPN-ul.
 - `502 Bad Gateway` → Node nu rulează: `systemctl status vps-demo`, `journalctl -u vps-demo -n 50 --no-pager`.
 - Apare „Welcome to nginx!” → n-ai șters `/etc/nginx/sites-enabled/default`.
 - `journalctl` ca app arată „No entries” → `exit` și reconectează-te (grupul `systemd-journal` se aplică la login nou).
@@ -135,5 +135,5 @@ curl -s http://127.0.0.1:3000/      # "app":"vps-demo-env-2", uptimeSeconds apro
 Hetzner: Console → server → **Delete**. Multipass: `multipass delete --purge vps` și `rm ~/vps-cloud-init.yaml`.
 
 ## Notițele mele
-- Varianta folosită / IP:
+- Varianta folosită / IP: B (Multipass pe Mac), VM `vps`, IP 192.168.252.2
 - Ce a mers diferit față de runbook și cum am rezolvat:
