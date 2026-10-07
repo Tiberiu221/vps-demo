@@ -1,0 +1,18 @@
+# Install (as root):
+#   cp deploy/vps-demo.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now vps-demo
+[Unit]
+Description=vps-demo Node.js app
+After=network.target
+
+[Service]
+Type=simple
+User=app
+WorkingDirectory=/home/app/vps-demo
+EnvironmentFile=/etc/vps-demo/app.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+# stdout/stderr go to the journal: journalctl -u vps-demo -f
+
+[Install]
+WantedBy=multi-user.target
